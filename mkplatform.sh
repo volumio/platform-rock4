@@ -89,6 +89,16 @@ for dts in "${C}"/overlay-user/overlays-"${P}"/*.dts; do
   fi
 done
 
+# Change name for audio interface(s)
+if [ ${ver} = "b" ]
+then
+  echo "Changing Audio interface name(s) for $P"
+  dtc -I dtb -O dts "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dtb -o "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dts
+  sed -i "s/Analog/Analog-ES8316/g" "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dts
+  dtc -I dts -O dtb -o "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dtb "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dts
+  rm "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dts
+fi
+
 # Copy and compile boot script
 cp "${A}"/config/bootscripts/boot-"${K}".cmd "${P}"/boot/boot.cmd
 mkimage -C none -A arm -T script -d "${P}"/boot/boot.cmd "${P}"/boot/boot.scr
