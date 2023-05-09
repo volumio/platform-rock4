@@ -12,7 +12,7 @@ else
 fi
 
 C=$(pwd)
-A=../../armbian
+A=../../armbian-master
 P="rockpi-4${ver}"
 B="current"
 T="rockpi-4${ver}"
@@ -97,6 +97,14 @@ then
   sed -i "s/Analog/Analog-ES8316/g" "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dts
   dtc -I dts -O dtb -o "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dtb "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dts
   rm "${P}"/boot/dtb/rockchip/rk3399-rock-pi-4b.dts
+fi
+
+# Add extras
+if [ -e "${C}"/extras/extras-"${P}"/asound.state ]
+then
+  echo "Copy asound.state config file"
+  mkdir -p "${P}"/var/lib/alsa
+  cp "${C}"/extras/extras-"${P}"/asound.state "${P}"/var/lib/alsa/asound.state
 fi
 
 # Copy and compile boot script
