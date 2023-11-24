@@ -18,6 +18,10 @@ B="current"
 T="rockpi-4${ver}"
 K="rockchip64"
 
+KERNELPATCH="no"
+PATCH_PREFIX="volumio-"
+KERNELCONFIGURE="no"
+
 # Make sure we grab the right version
 ARMBIAN_VERSION=$(cat ${A}/VERSION)
 
@@ -26,7 +30,13 @@ echo "Adding custom patches"
 ls "${C}/patches/"
 mkdir -p "${A}"/userpatches/kernel/"${K}"-"${B}"/
 rm -rf "${A}"/userpatches/kernel/"${K}"-"${B}"/*.patch
-cp "${C}"/patches/*.patch "${A}"/userpatches/kernel/"${K}"-"${B}"/
+
+for patchfile in "${C}/patches/"*.patch; do
+  if [ ! "${patchfile}/" == "${C}/patches/*.patch/" ]; then
+    echo "Adding ${patchfile}"
+    cp "${patchfile}" "${A}"/userpatches/kernel/"${K}"-"${B}"
+  fi  
+done
 
 # Custom kernel Config
 if [ -e "${C}"/kernel-config/linux-"${K}"-"${B}".config ]
@@ -44,11 +54,40 @@ then
   cp "${C}"/kernel-ver/"${P}"*.config "${A}"/userpatches/lib.config
 fi
 
+if [ -d "${A}"/output/debs ]; then
+  echo "Cleaning previous .deb builds"
+  rm -rf "${A}"/output/debs/*
+fi
+
 cd ${A}
 ARMBIAN_HASH=$(git rev-parse --short HEAD)
+#echo "Building for $P -- with Armbian ${ARMBIAN_VERSION} -- $B"
+#./compile.sh BOARD="${T}" BRANCH="${B}" RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no BUILD_ONLY=u-boot,kernel,armbian-firmware "${armbian_extra_flags[@]}"
+
 echo "Building for $P -- with Armbian ${ARMBIAN_VERSION} -- $B"
 
-./compile.sh BOARD="${T}" BRANCH="${B}" RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no BUILD_ONLY=u-boot,kernel,armbian-firmware "${armbian_extra_flags[@]}"
+./compile.sh ARTIFACT_IGNORE_CACHE=yes BOARD=${T} BRANCH=${B} uboot 
+
+if [ $KERNELPATCH == yes ]; then
+  ./compile.sh ARTIFACT_IGNORE_CACHE=yes BOARD=${T} BRANCH=${B} kernel-patch 
+  
+  # Note: armbian patch files are applied in alphabetic order!!!
+  # To make sure that user patches are applied after Armbian's own patches, use a unique pre-fix"
+  if [ -f ./output/patch/kernel-"${K}"-"${B}".patch ]; then
+    cp ./output/patch/kernel-"${K}"-"${B}".patch "${C}"/patches/"${PATCH_PREFIX}"-kernel-"${K}"-"${B}".patch
+    cp "${C}"/patches/"${PATCH_PREFIX}"-kernel-"${K}"-"${B}".patch ./userpatches/kernel/"${K}"-"${B}"/
+    rm ./output/patch/kernel-"${K}"-"${B}".patch
+  fi
+fi
+
+if [ $KERNELCONFIGURE == yes ]; then
+  ./compile.sh ARTIFACT_IGNORE_CACHE=yes BOARD=${T} BRANCH=${B} kernel-config 
+  cp ./userpatches/linux-"${K}"-"${B}".config "${C}"/kernel-config/
+fi
+
+./compile.sh CLEAN_LEVEL=images,debs,make-kernel ARTIFACT_IGNORE_CACHE=yes BOARD=${T} BRANCH=${B} kernel
+
+./compile.sh ARTIFACT_IGNORE_CACHE=yes BOARD=${T} BRANCH=${B} firmware 
 
 echo "Done!"
 
@@ -63,13 +102,16 @@ cp "${A}/output/debs/linux-headers-${B}-${K}_${ARMBIAN_VERSION}"* "${C}"
 
 dpkg-deb -x "${A}/output/debs/linux-dtb-${B}-${K}_${ARMBIAN_VERSION}"* "${P}"
 dpkg-deb -x "${A}/output/debs/linux-image-${B}-${K}_${ARMBIAN_VERSION}"* "${P}"
-dpkg-deb -x "${A}/output/debs/linux-u-boot-${B}-${T}_${ARMBIAN_VERSION}"* "${P}"
+dpkg-deb -x "${A}/output/debs/linux-u-boot-${T}-${B}_${ARMBIAN_VERSION}"* "${P}"
 dpkg-deb -x "${A}/output/debs/armbian-firmware_${ARMBIAN_VERSION}"* "${P}"
 
+echo "Remove unused firmware"
+rm -r "${T}"/lib/firmware/qcom
+rm "${T}"/lib/firmware/dvb*
+
 # Copy bootloader stuff
-cp "${P}"/usr/lib/linux-u-boot-${B}-*/uboot.img "${P}/u-boot"
-cp "${P}"/usr/lib/linux-u-boot-${B}-*/trust.bin "${P}/u-boot"
-cp "${P}"/usr/lib/linux-u-boot-${B}-*/idbloader.bin "${P}/u-boot"
+cp "${P}"/usr/lib/linux-u-boot-${B}-*/u-boot.itb "${P}/u-boot"
+cp "${P}"/usr/lib/linux-u-boot-${B}-*/idbloader.img "${P}/u-boot"
 
 mv "${P}"/boot/dtb* "${P}"/boot/dtb
 mv "${P}"/boot/vmlinuz* "${P}"/boot/Image
