@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: John Doe <john.doe@somewhere.on.planet>
+Date: Fri, 24 Nov 2023 18:31:55 +0100
+Subject: Patching kernel rockchip64 files sound/usb/quirks.c
+
+Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+---
+ sound/usb/quirks.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
+index f458328f9ec4..b583bb5a3d03 100644
+--- a/sound/usb/quirks.c
++++ b/sound/usb/quirks.c
+@@ -2203,10 +2203,14 @@ static const struct usb_audio_quirk_flags_table quirk_flags_table[] = {
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x21ed, /* Accuphase Laboratory */
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x22d9, /* Oppo */
+ 		   QUIRK_FLAG_DSD_RAW),
++	VENDOR_FLG(0x22e1, /* TempoTec Sonata BHD */
++		   QUIRK_FLAG_DSD_RAW),
++	VENDOR_FLG(0x22e8,  /* Cambridge */
++		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x23ba, /* Playback Design */
+ 		   QUIRK_FLAG_CTL_MSG_DELAY | QUIRK_FLAG_IFACE_DELAY |
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x25ce, /* Mytek devices */
+ 		   QUIRK_FLAG_DSD_RAW),
+@@ -2220,10 +2224,12 @@ static const struct usb_audio_quirk_flags_table quirk_flags_table[] = {
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x2afd, /* McIntosh Laboratory, Inc. */
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x2d87, /* Cayin device */
+ 		   QUIRK_FLAG_DSD_RAW),
++	VENDOR_FLG(0x2fc6, /* E1DA #9038D  */
++		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x3336, /* HEM devices */
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x3353, /* Khadas devices */
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x35f4, /* MSB Technology */
+-- 
+Created with Armbian build tools https://github.com/armbian/build
+
