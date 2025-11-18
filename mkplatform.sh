@@ -109,6 +109,7 @@ dpkg-deb -x "${A}/output/debs/armbian-firmware_${ARMBIAN_VERSION}"* "${P}"
 echo "Remove unused firmware"
 rm -rf "${P}"/lib/firmware/qcom
 rm -rf "${P}"/lib/firmware/dvb*
+rm -rf "${P}"/lib/firmware/ath11k
 
 # Copy bootloader stuff
 cp "${P}"/usr/lib/linux-u-boot-${B}-*/u-boot.itb "${P}/u-boot"
